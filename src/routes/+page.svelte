@@ -25,7 +25,18 @@
 		}
 
 		response = await client.v0betaSyncDocument(tempId, 0, [
-			{ op: 'insert', pointer: '/todoList', content: [] }
+			{
+				op: 'insert',
+				pointer: '/todoList',
+				content: [
+					{
+						title: 'Sample Task',
+						description: 'This is a sample task!',
+						completed: false,
+						subtasks: []
+					}
+				]
+			}
 		]);
 		if (!response.isSuccess()) {
 			documentCreationFailed = true;
