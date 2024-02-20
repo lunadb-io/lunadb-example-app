@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Addtask from './addtask.svelte';
 	import Alert from './alert.svelte';
 	import LoaderButton from './loader_button.svelte';
 	import Task from './task.svelte';
@@ -53,27 +54,49 @@
 	export let client: any;
 	export let document_id: string;
 
-	let active_document_state = new DocumentState(document_id);
-	let shadow_document_state = new DocumentState(document_id);
+	let documentState = new DocumentState(document_id);
 	let lastLoadFailed: boolean = false;
 
 	async function loadDocument() {
-		let response: any = await client.v0betaLoadDocument(shadow_document_state.document_id);
+		let response: any = await client.v0betaLoadDocument(documentState.document_id);
 		if (response.isSuccess()) {
-			shadow_document_state.tasks = response.content.contents.todoList;
+			documentState.tasks = response.content.contents.todoList;
 			lastLoadFailed = false;
 		} else {
 			lastLoadFailed = true;
 		}
 	}
+
+	function processTaskUpdate(task_pos: number, e: CustomEvent) {
+		let detail = e.detail;
+		let pointer = '/todoList/' + task_pos + '/' + detail.key;
+		let delta = { op: 'insert', pointer: pointer, content: detail.value };
+		console.log('New delta recorded', delta);
+		documentState.deltaset.push(delta);
+	}
 </script>
 
 <Alert bind:showAlert={lastLoadFailed}>Failed to load document</Alert>
 
-<LoaderButton class="btn-primary" on:load={loadDocument}>Load Document</LoaderButton>
-
-{#if shadow_document_state.tasks !== undefined}
-	{#each shadow_document_state.tasks as task}
-		<Task title={task.title} description={task.description} completed={task.completed}></Task>
-	{/each}
-{/if}
+<div>
+	<div class="flex flex-row w-full">
+		<div class="mb-3">
+			<p class="text-lg font-bold">Your Tasks</p>
+			<p class="italic text-xs text-gray-500">Document: {document_id}</p>
+		</div>
+		<div style="margin-left:auto" class="self-center">
+			<LoaderButton class="btn-primary btn-xs" on:load={loadDocument}>Load Document</LoaderButton>
+		</div>
+	</div>
+	{#if documentState.tasks !== undefined}
+		{#each documentState.tasks as task, pos}
+			<Task
+				title={task.title}
+				description={task.description}
+				completed={task.completed}
+				on:update={(e) => processTaskUpdate(pos, e)}
+			></Task>
+		{/each}
+		<Addtask></Addtask>
+	{/if}
+</div>

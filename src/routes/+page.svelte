@@ -61,6 +61,5 @@
 	/>
 	<button class="btn" on:click={() => (document_id = existingDocId)}>Use Existing</button>
 {:else}
-	<p>Your document's ID is: {document_id}</p>
 	<DocumentState {client} {document_id}></DocumentState>
 {/if}
