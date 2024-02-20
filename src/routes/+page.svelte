@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Alert from '$lib/alert.svelte';
 	import DocumentState from '$lib/document_state.svelte';
+	import LoaderButton from '$lib/loader_button.svelte';
 
 	// @ts-ignore
 	import LunaDBClient from 'lunadb-client-js';
@@ -13,38 +14,24 @@
 	client.toggleQueryAnalysis(true);
 
 	let existingDocId = '';
-	let creatingDocument: boolean = false;
 	let documentCreationFailed: boolean = false;
 
-	async function createDocument(id: string) {
-		let response: any = await client.v0betaCreateDocument(id);
-		return response.isSuccess();
-	}
-
 	async function createNewDocument() {
-		if (!creatingDocument) {
-			let tempId = crypto.randomUUID();
-			let creationSucceeded = await createDocument(tempId);
-			if (creationSucceeded) {
-				document_id = tempId;
-				documentCreationFailed = false;
-			} else {
-				documentCreationFailed = true;
-			}
+		let tempId = crypto.randomUUID();
+		let response = await client.v0betaCreateDocument(tempId);
+		if (response.isSuccess()) {
+			document_id = tempId;
+			documentCreationFailed = false;
+		} else {
+			documentCreationFailed = true;
 		}
-		creatingDocument = false;
 	}
 </script>
 
 <Alert bind:showAlert={documentCreationFailed}>Failed to create document</Alert>
 
 {#if document_id === undefined}
-	<button class="btn btn-primary" on:click={createNewDocument}>
-		{#if creatingDocument}
-			<span class="loading loading-spinner"></span>
-		{/if}
-		Create New</button
-	>
+	<LoaderButton class="btn-primary" on:load={createNewDocument}>Create New</LoaderButton>
 	<p>Or...</p>
 	<input
 		type="text"
