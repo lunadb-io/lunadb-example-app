@@ -62,7 +62,7 @@
 	async function loadDocument() {
 		let response: any = await client.v0betaLoadDocument(shadow_document_state.document_id);
 		if (response.isSuccess()) {
-			shadow_document_state.todoList = response.content.contents;
+			shadow_document_state.todoList = response.content.contents.todoList;
 			lastLoadFailed = false;
 		} else {
 			lastLoadFailed = true;

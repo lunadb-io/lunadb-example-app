@@ -8,7 +8,7 @@
 
 	export let data;
 	// @ts-ignore
-	let document_id: string | undefined = data.document_id;
+	let document_id: string | null = data.document_id;
 
 	let client = new LunaDBClient('http://localhost:8888');
 	client.toggleQueryAnalysis(true);
@@ -19,18 +19,27 @@
 	async function createNewDocument() {
 		let tempId = crypto.randomUUID();
 		let response = await client.v0betaCreateDocument(tempId);
-		if (response.isSuccess()) {
-			document_id = tempId;
-			documentCreationFailed = false;
-		} else {
+		if (!response.isSuccess()) {
 			documentCreationFailed = true;
+			return;
 		}
+
+		response = await client.v0betaSyncDocument(tempId, 0, [
+			{ op: 'insert', pointer: '/todoList', content: [] }
+		]);
+		if (!response.isSuccess()) {
+			documentCreationFailed = true;
+			return;
+		}
+
+		document_id = tempId;
+		documentCreationFailed = false;
 	}
 </script>
 
 <Alert bind:showAlert={documentCreationFailed}>Failed to create document</Alert>
 
-{#if document_id === undefined}
+{#if document_id === null}
 	<LoaderButton class="btn-primary" on:load={createNewDocument}>Create New</LoaderButton>
 	<p>Or...</p>
 	<input
