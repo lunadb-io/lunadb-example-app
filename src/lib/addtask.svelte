@@ -1,5 +1,22 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
+
 	let active: boolean = false;
+	let title: string = '';
+	let description: string = '';
+
+	function onAddTask() {
+		dispatch('addTask', { title: title, description: description });
+		clearActive();
+	}
+
+	function clearActive() {
+		active = false;
+		title = '';
+		description = '';
+	}
 </script>
 
 {#if active}
@@ -8,14 +25,16 @@
 			type="text"
 			placeholder="Task name"
 			class="input w-full outline-none focus:outline-none border-none focus:border-none font-semibold"
+			bind:value={title}
 		/>
 		<textarea
 			placeholder="Description"
 			class="textarea py-0 w-full outline-none focus:outline-none border-none focus:border-none text-sm"
+			bind:value={description}
 		/>
 		<div class="flex flex-row justify-end p-4 space-x-2">
-			<button class="btn btn-sm" on:click={() => (active = false)}>Cancel</button>
-			<button class="btn btn-sm btn-primary">Add task</button>
+			<button class="btn btn-sm" on:click={clearActive}>Cancel</button>
+			<button class="btn btn-sm btn-primary" on:click={onAddTask}>Add task</button>
 		</div>
 	</div>
 {:else}

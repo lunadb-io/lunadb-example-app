@@ -74,6 +74,22 @@
 		console.log('New delta recorded', delta);
 		documentState.deltaset.push(delta);
 	}
+
+	function processTaskCreation(e: CustomEvent) {
+		if (documentState.tasks !== undefined) {
+			let detail = e.detail;
+			let pointer = '/todoList/' + documentState.tasks?.length;
+			let data = new TaskData(detail.title, detail.description, false, []);
+			documentState.tasks = [...documentState.tasks, data];
+			let delta = {
+				op: 'insert',
+				pointer: pointer,
+				content: data
+			};
+			console.log('New delta recorded', delta);
+			documentState.deltaset.push(delta);
+		}
+	}
 </script>
 
 <Alert bind:showAlert={lastLoadFailed}>Failed to load document</Alert>
@@ -97,6 +113,6 @@
 				on:update={(e) => processTaskUpdate(pos, e)}
 			></Task>
 		{/each}
-		<Addtask></Addtask>
+		<Addtask on:addTask={(e) => processTaskCreation(e)}></Addtask>
 	{/if}
 </div>
