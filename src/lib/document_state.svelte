@@ -8,27 +8,10 @@
 		title: string;
 		description: string;
 		completed: boolean;
-		subtasks: Array<SubtaskData>;
 
-		constructor(
-			title: string,
-			description: string,
-			completed: boolean,
-			subtasks: Array<SubtaskData>
-		) {
+		constructor(title: string, description: string, completed: boolean) {
 			this.title = title;
 			this.description = description;
-			this.completed = completed;
-			this.subtasks = subtasks;
-		}
-	}
-
-	class SubtaskData {
-		title: string;
-		completed: boolean;
-
-		constructor(title: string, completed: boolean) {
-			this.title = title;
 			this.completed = completed;
 		}
 	}
@@ -79,7 +62,7 @@
 		if (documentState.tasks !== undefined) {
 			let detail = e.detail;
 			let pointer = '/todoList/' + documentState.tasks?.length;
-			let data = new TaskData(detail.title, detail.description, false, []);
+			let data = new TaskData(detail.title, detail.description, false);
 			documentState.tasks = [...documentState.tasks, data];
 			let delta = {
 				op: 'insert',
