@@ -5,6 +5,7 @@
 
 	export let title: string = '';
 	export let description: string = '';
+	export let canDelete: boolean = false;
 
 	function finish() {
 		dispatch('create', { title: title, description: description });
@@ -12,6 +13,10 @@
 
 	function cancel() {
 		dispatch('cancel');
+	}
+
+	function onDelete() {
+		dispatch('delete');
 	}
 </script>
 
@@ -28,6 +33,11 @@
 		bind:value={description}
 	/>
 	<div class="flex flex-row justify-end p-4 space-x-2">
+		{#if canDelete}
+			<div style="margin-right: auto">
+				<button class="btn btn-sm btn-error" on:click={onDelete}>Delete</button>
+			</div>
+		{/if}
 		<button class="btn btn-sm" on:click={cancel}>Cancel</button>
 		<button class="btn btn-sm btn-primary" on:click={finish}>Add task</button>
 	</div>

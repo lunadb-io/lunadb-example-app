@@ -73,7 +73,31 @@
 			documentState.deltaset.push(delta);
 		}
 	}
+
+	function processTaskDeletion(task_pos: number) {
+		if (documentState.tasks !== undefined) {
+			let pointer = '/todoList/' + task_pos;
+			documentState.tasks = documentState.tasks?.toSpliced(task_pos, 1);
+			let delta = {
+				op: 'remove',
+				pointer: pointer
+			};
+			console.log('New delta recorded', delta);
+			documentState.deltaset.push(delta);
+		}
+	}
+
+	function warnUnsavedChanges() {
+		if (documentState.deltaset.length > 0) {
+			if (event !== undefined) {
+				event.preventDefault();
+				event.returnValue = true;
+			}
+		}
+	}
 </script>
+
+<svelte:window on:beforeunload={warnUnsavedChanges} />
 
 <Alert bind:showAlert={lastLoadFailed}>Failed to load document</Alert>
 
@@ -94,6 +118,7 @@
 				description={task.description}
 				completed={task.completed}
 				on:update={(e) => processTaskUpdate(pos, e)}
+				on:delete={() => processTaskDeletion(pos)}
 			></Task>
 		{/each}
 		<Addtask on:addTask={(e) => processTaskCreation(e)}></Addtask>

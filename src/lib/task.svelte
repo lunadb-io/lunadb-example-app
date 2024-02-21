@@ -34,8 +34,10 @@
 	<TaskEditor
 		{title}
 		{description}
+		canDelete={true}
 		on:create={(e) => onTaskTextUpdate(e)}
 		on:cancel={() => (activeEditor = false)}
+		on:delete
 	></TaskEditor>
 {:else}
 	<div>
