@@ -17,7 +17,11 @@
 </script>
 
 {#if active}
-	<TaskEditor on:create={(e) => onAddTask(e.detail)} on:cancel={clearActive}></TaskEditor>
+	<TaskEditor
+		on:create={(e) => onAddTask(e.detail)}
+		on:cancel={clearActive}
+		confirmText={'Add task'}
+	></TaskEditor>
 {:else}
 	<div class="p-4">
 		<button class="btn btn-sm" on:click={() => (active = true)}>

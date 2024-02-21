@@ -6,6 +6,7 @@
 	export let title: string = '';
 	export let description: string = '';
 	export let canDelete: boolean = false;
+	export let confirmText: string;
 
 	function finish() {
 		dispatch('create', { title: title, description: description });
@@ -39,6 +40,6 @@
 			</div>
 		{/if}
 		<button class="btn btn-sm" on:click={cancel}>Cancel</button>
-		<button class="btn btn-sm btn-primary" on:click={finish}>Add task</button>
+		<button class="btn btn-sm btn-primary" on:click={finish}>{confirmText}</button>
 	</div>
 </div>

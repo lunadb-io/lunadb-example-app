@@ -35,6 +35,7 @@
 		{title}
 		{description}
 		canDelete={true}
+		confirmText={'Update'}
 		on:create={(e) => onTaskTextUpdate(e)}
 		on:cancel={() => (activeEditor = false)}
 		on:delete
