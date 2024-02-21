@@ -26,6 +26,7 @@
 <button class="btn {className}" on:click={requestLoad}>
 	{#if isLoading}
 		<span class="loading loading-spinner"></span>
+	{:else}
+		<slot />
 	{/if}
-	<slot />
 </button>

@@ -39,8 +39,10 @@
 
 	let documentState = new DocumentState(document_id);
 	let lastLoadFailed: boolean = false;
+	let loaderButton: any;
 
 	async function loadDocument() {
+		loaderButton.setIsLoading();
 		let response: any = await client.v0betaLoadDocument(documentState.document_id);
 		if (response.isSuccess()) {
 			documentState.tasks = response.content.contents.todoList;
@@ -48,6 +50,7 @@
 		} else {
 			lastLoadFailed = true;
 		}
+		loaderButton.setIsLoaded();
 	}
 
 	function processTaskUpdate(task_pos: number, e: CustomEvent) {
@@ -108,7 +111,9 @@
 			<p class="italic text-xs text-gray-500">Document: {document_id}</p>
 		</div>
 		<div style="margin-left:auto" class="self-center">
-			<LoaderButton class="btn-primary btn-xs" on:load={loadDocument}>Load Document</LoaderButton>
+			<LoaderButton class="btn-primary btn-xs" bind:this={loaderButton} on:load={loadDocument}>
+				Load Document
+			</LoaderButton>
 		</div>
 	</div>
 	{#if documentState.tasks !== undefined}

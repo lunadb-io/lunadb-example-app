@@ -15,8 +15,10 @@
 
 	let existingDocId = '';
 	let documentCreationFailed: boolean = false;
+	let loaderButton: any;
 
 	async function createNewDocument() {
+		loaderButton.setIsLoading();
 		let tempId = crypto.randomUUID();
 		let response = await client.v0betaCreateDocument(tempId);
 		if (!response.isSuccess()) {
@@ -45,6 +47,8 @@
 
 		document_id = tempId;
 		documentCreationFailed = false;
+		loaderButton.setIsLoaded();
+
 		const urlParams = new URLSearchParams(window.location.search);
 		urlParams.set('id', document_id);
 		window.location.search = urlParams.toString();
@@ -54,7 +58,9 @@
 <Alert bind:showAlert={documentCreationFailed}>Failed to create document</Alert>
 
 {#if document_id === null}
-	<LoaderButton class="btn-primary" on:load={createNewDocument}>Create New</LoaderButton>
+	<LoaderButton class="btn-primary" bind:this={loaderButton} on:load={createNewDocument}>
+		Create New
+	</LoaderButton>
 	<p>Or...</p>
 	<input
 		type="text"
