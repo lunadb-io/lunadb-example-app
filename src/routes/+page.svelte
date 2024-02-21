@@ -45,6 +45,9 @@
 
 		document_id = tempId;
 		documentCreationFailed = false;
+		const urlParams = new URLSearchParams(window.location.search);
+		urlParams.set('id', document_id);
+		window.location.search = urlParams.toString();
 	}
 </script>
 
