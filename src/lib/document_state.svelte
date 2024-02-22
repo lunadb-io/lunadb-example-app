@@ -39,6 +39,7 @@
 
 	export let client: any;
 	export let document_id: string;
+	let lastSyncedTimestamp: number;
 
 	let documentState = new DocumentState(document_id);
 	let shadowDocumentState = new DocumentState(document_id);
@@ -65,7 +66,11 @@
 
 	async function syncChanges() {
 		syncerButton.setIsLoading();
-		console.log('Syncing deltaset', documentState.deltaset);
+		if (documentState.deltaset.length > 0) {
+			console.log('Syncing deltaset', documentState.deltaset, documentState.lastSynced);
+		} else {
+			console.log('Pulling changes', documentState.lastSynced);
+		}
 		let response: any = await client.v0betaSyncDocument(
 			documentState.document_id,
 			documentState.lastSynced,
@@ -108,6 +113,7 @@
 	function rerender() {
 		console.log('Rerendering document state by cloning shadow state');
 		documentState = structuredClone(shadowDocumentState);
+		lastSyncedTimestamp = documentState.lastSynced;
 	}
 
 	function processTaskUpdate(task_pos: number, e: CustomEvent) {
@@ -167,6 +173,11 @@
 		<div class="mb-3">
 			<p class="text-lg font-bold">Your Tasks</p>
 			<p class="italic text-xs text-gray-500">Document: {document_id}</p>
+			{#if lastSyncedTimestamp !== undefined}
+				<p class="italic text-xs text-gray-500">
+					Last Sync: {documentState.lastSynced}
+				</p>
+			{/if}
 		</div>
 		<div style="margin-left:auto" class="self-center space-x-2">
 			<LoaderButton class="btn-secondary btn-xs" bind:this={loaderButton} on:load={loadDocument}>
