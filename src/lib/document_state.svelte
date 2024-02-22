@@ -175,7 +175,7 @@
 			<p class="italic text-xs text-gray-500">Document: {document_id}</p>
 			{#if lastSyncedTimestamp !== undefined}
 				<p class="italic text-xs text-gray-500">
-					Last Sync: {documentState.lastSynced}
+					Most Recent Change ID: {documentState.lastSynced}
 				</p>
 			{/if}
 		</div>
