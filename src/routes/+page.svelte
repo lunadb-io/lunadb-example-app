@@ -26,7 +26,7 @@
 			return;
 		}
 
-		response = await client.v0betaSyncDocument(tempId, 0, [
+		response = await client.v0betaSyncDocument(tempId, '0', [
 			{
 				op: 'insert',
 				pointer: '/todoList',
@@ -34,8 +34,7 @@
 					{
 						title: 'Sample Task',
 						description: 'This is a sample task!',
-						completed: false,
-						subtasks: []
+						completed: false
 					}
 				]
 			}
@@ -58,17 +57,27 @@
 <Alert bind:showAlert={documentCreationFailed}>Failed to create document</Alert>
 
 {#if document_id === null}
-	<LoaderButton class="btn-primary" bind:this={loaderButton} on:load={createNewDocument}>
-		Create New
-	</LoaderButton>
-	<p>Or...</p>
-	<input
-		type="text"
-		placeholder="Enter document ID"
-		class="input input-bordered w-full max-w-xs"
-		bind:value={existingDocId}
-	/>
-	<button class="btn" on:click={() => (document_id = existingDocId)}>Use Existing</button>
+	<div class="flex flex-col items-center pt-4">
+		<LoaderButton
+			class="btn-primary w-full max-w-xs"
+			bind:this={loaderButton}
+			on:load={createNewDocument}
+		>
+			Create New
+		</LoaderButton>
+		<p class="py-3">Or...</p>
+		<div class="space-y-3">
+			<input
+				type="text"
+				placeholder="Enter document ID"
+				class="input input-bordered w-full max-w-xs"
+				bind:value={existingDocId}
+			/>
+			<button class="btn w-full max-w-xs" on:click={() => (document_id = existingDocId)}
+				>Use Existing</button
+			>
+		</div>
+	</div>
 {:else}
 	<DocumentState {client} {document_id}></DocumentState>
 {/if}
