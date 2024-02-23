@@ -39,6 +39,6 @@
 	"type": "module",
 	"dependencies": {
 		"json-pointer": "^0.6.2",
-		"lunadb-client-js": "file:../lunadb-client-js"
+		"lunadb-client-js": "git+https://github.com/lunadb-io/lunadb-client-js#53afe5c"
 	}
 }
