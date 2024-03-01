@@ -1,4 +1,7 @@
 <script lang="ts">
+	// @ts-ignore
+	import { PUBLIC_DB_HOST } from '$env/static/public';
+
 	import Alert from '$lib/alert.svelte';
 	import DocumentState from '$lib/document_state.svelte';
 	import LoaderButton from '$lib/loader_button.svelte';
@@ -10,7 +13,7 @@
 	// @ts-ignore
 	let document_id: string | null = data.document_id;
 
-	let client = new LunaDBClient('http://localhost:8888');
+	let client = new LunaDBClient(PUBLIC_DB_HOST);
 	client.toggleQueryAnalysis(true);
 
 	let existingDocId = '';
