@@ -1,5 +1,5 @@
 FROM node:21.6.2-bookworm AS builder
-ENV PUBLIC_DB_HOST=https://db-0000000000000000.sf1.do.lunadb.io
+ENV PUBLIC_DB_HOST=https://db-p4phlb69d0sxhbb8.sf1.do.lunadb.io
 WORKDIR /app
 COPY package*.json .
 RUN npm ci
