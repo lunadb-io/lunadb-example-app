@@ -181,13 +181,16 @@
 		</div>
 		<div style="margin-left:auto" class="self-center space-x-2">
 			<LoaderButton class="btn-secondary btn-xs" bind:this={loaderButton} on:load={loadDocument}>
-				Load Document
+				Reload Document
 			</LoaderButton>
-			{#if documentState.todoList !== undefined}
-				<LoaderButton class="btn-primary btn-xs" bind:this={syncerButton} on:load={syncChanges}>
-					Sync Changes
-				</LoaderButton>
-			{/if}
+			<LoaderButton
+				class="btn-primary btn-xs"
+				disabled={documentState.todoList === undefined}
+				bind:this={syncerButton}
+				on:load={syncChanges}
+			>
+				Sync Changes
+			</LoaderButton>
 		</div>
 	</div>
 	{#if documentState.todoList !== undefined}
@@ -201,5 +204,19 @@
 			></Task>
 		{/each}
 		<Addtask on:addTask={(e) => processTaskCreation(e)}></Addtask>
+	{:else}
+		<div class="flex flex-row w-full justify-center mt-10">
+			<div class="card w-96 bg-neutral text-neutral-content">
+				<div class="card-body items-center text-center">
+					<p>Before you can make changes, you have to load the current state of the document.</p>
+					<p>Once that's done, then application can report using smaller changes.</p>
+					<div class="card-actions justify-end pt-4">
+						<LoaderButton class="btn-secondary" bind:this={loaderButton} on:load={loadDocument}>
+							Load Document
+						</LoaderButton>
+					</div>
+				</div>
+			</div>
+		</div>
 	{/if}
 </div>

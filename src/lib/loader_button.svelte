@@ -6,6 +6,8 @@
 	let className: string;
 	export { className as class };
 
+	export let disabled: boolean = false;
+
 	let isLoading = false;
 
 	function requestLoad() {
@@ -23,7 +25,7 @@
 	}
 </script>
 
-<button class="btn {className}" on:click={requestLoad}>
+<button class="btn {className}" class:btn-disabled={disabled} on:click={requestLoad}>
 	{#if isLoading}
 		<span class="loading loading-spinner"></span>
 	{:else}
