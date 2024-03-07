@@ -43,6 +43,13 @@
 		urlParams.set('id', document_id);
 		window.location.search = urlParams.toString();
 	}
+
+	function loadExistingDocument() {
+		document_id = existingDocId;
+		const urlParams = new URLSearchParams(window.location.search);
+		urlParams.set('id', document_id);
+		window.location.search = urlParams.toString();
+	}
 </script>
 
 <Alert bind:showAlert={documentCreationFailed}>Failed to create document</Alert>
@@ -91,7 +98,7 @@
 								class="input input-bordered w-full"
 								bind:value={existingDocId}
 							/>
-							<button class="btn w-full" on:click={() => (document_id = existingDocId)}
+							<button class="btn w-full" on:click={loadExistingDocument}
 								>Load Existing Document</button
 							>
 						</div>
