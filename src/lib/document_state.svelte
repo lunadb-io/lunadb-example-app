@@ -4,45 +4,28 @@
 	import LoaderButton from './loader_button.svelte';
 	import Task from './task.svelte';
 
-	// @ts-ignore
-	import JsonPointer from 'json-pointer';
+	import LunaDBAPIClientBridge, {
+		DocumentTransaction,
+		LunaDBDocument
+	} from '@lunadb-io/lunadb-client-js';
 
-	class TaskData {
+	interface TaskData {
 		title: string;
 		description: string;
 		completed: boolean;
-
-		constructor(title: string, description: string, completed: boolean) {
-			this.title = title;
-			this.description = description;
-			this.completed = completed;
-		}
 	}
 
-	class DocumentState {
+	class TodoList {
 		todoList: Array<TaskData> | undefined;
-		lastSynced: number;
-		document_id: string;
-		deltaset: Array<object>;
-
-		constructor(document_id: string) {
-			this.todoList = undefined;
-			this.lastSynced = 0;
-			this.document_id = document_id;
-			this.deltaset = [];
-		}
-
-		getRaw() {
-			return JSON.stringify(this.todoList);
-		}
 	}
 
-	export let client: any;
+	export let client: LunaDBAPIClientBridge;
 	export let document_id: string;
-	let lastSyncedTimestamp: number;
 
-	let documentState = new DocumentState(document_id);
-	let shadowDocumentState = new DocumentState(document_id);
+	let liveDocumentState: TodoList | undefined;
+	let shadowDocumentState: LunaDBDocument | undefined;
+	let currentTransaction: DocumentTransaction | undefined;
+	let lastSyncedTimestamp: string | undefined;
 
 	let lastLoadFailed: boolean = false;
 	let lastSyncFailed: boolean = false;
@@ -51,60 +34,36 @@
 
 	async function loadDocument() {
 		loaderButton.setIsLoading();
-		let response: any = await client.v0betaLoadDocument(documentState.document_id);
-		if (response.isSuccess()) {
-			console.log('Received document state', response.content);
-			shadowDocumentState.todoList = response.content.contents.todoList;
-			shadowDocumentState.lastSynced = response.content.hlc;
-			rerender();
+		try {
+			shadowDocumentState = await client.loadDocument(document_id);
+			currentTransaction = shadowDocumentState.newTransaction();
+			console.log('Received document state', shadowDocumentState.baseContent);
 			lastLoadFailed = false;
-		} else {
+			rerender();
+		} catch (e) {
 			lastLoadFailed = true;
 		}
 		loaderButton.setIsLoaded();
 	}
 
 	async function syncChanges() {
-		syncerButton.setIsLoading();
-		if (documentState.deltaset.length > 0) {
-			console.log('Syncing deltaset', documentState.deltaset, documentState.lastSynced);
-		} else {
-			console.log('Pulling changes', documentState.lastSynced);
+		if (shadowDocumentState === undefined || currentTransaction === undefined) {
+			lastSyncFailed = true;
+			throw new Error('Document must be loaded');
 		}
-		let response: any = await client.v0betaSyncDocument(
-			documentState.document_id,
-			documentState.lastSynced,
-			documentState.deltaset
-		);
-		if (response.isSuccess()) {
-			response.content.changes.forEach(function (delta: any) {
-				console.log('Applying delta to shadow state', delta);
-				let op = delta.op;
-				let pointer = delta.pointer;
 
-				if (pointer === undefined) {
-					console.error('Received operation with undefined pointer');
-					return;
-				}
-
-				switch (op) {
-					case 'insert':
-						JsonPointer.set(shadowDocumentState, pointer, delta.content);
-						break;
-					case 'replace':
-						JsonPointer.set(shadowDocumentState, pointer, delta.content);
-						break;
-					case 'delete':
-						JsonPointer.remove(shadowDocumentState, pointer);
-						break;
-					default:
-						console.error('Operation type ' + op + ' not handled');
-				}
-			});
-			shadowDocumentState.lastSynced = response.content.hlc;
-			rerender();
+		syncerButton.setIsLoading();
+		try {
+			// NOTE: This could blow out changes made between when the sync button was pressed
+			// and the change was actually applied. Editors like ProseMirror fix this problem
+			// by allowing you to correct a transaction against remote changes, kind of like
+			// git's rebase. Our application here does not provide that however.
+			let applied = await client.syncDocument(shadowDocumentState, currentTransaction);
+			currentTransaction = shadowDocumentState.newTransaction();
+			console.log('Applied changes', applied);
 			lastSyncFailed = false;
-		} else {
+			rerender();
+		} catch (e) {
 			lastSyncFailed = true;
 		}
 		syncerButton.setIsLoaded();
@@ -112,49 +71,45 @@
 
 	function rerender() {
 		console.log('Rerendering document state by cloning shadow state');
-		documentState = structuredClone(shadowDocumentState);
-		lastSyncedTimestamp = documentState.lastSynced;
+		liveDocumentState = structuredClone(shadowDocumentState?.baseContent) as TodoList;
+		lastSyncedTimestamp = shadowDocumentState?.lastSynced;
 	}
 
 	function processTaskUpdate(task_pos: number, e: CustomEvent) {
-		let detail = e.detail;
-		let pointer = '/todoList/' + task_pos + '/' + detail.key;
-		let delta = { op: 'replace', pointer: pointer, content: detail.value };
-		console.log('New delta recorded', delta);
-		documentState.deltaset.push(delta);
+		if (currentTransaction !== undefined) {
+			let detail = e.detail;
+			let pointer = '/todoList/' + task_pos + '/' + detail.key;
+			currentTransaction.replace(pointer, detail.value);
+			console.log('Task updated', pointer, detail.value);
+		}
 	}
 
 	function processTaskCreation(e: CustomEvent) {
-		if (documentState.todoList !== undefined) {
+		if (liveDocumentState?.todoList !== undefined && currentTransaction !== undefined) {
 			let detail = e.detail;
-			let pointer = '/todoList/' + documentState.todoList?.length;
-			let data = new TaskData(detail.title, detail.description, false);
-			documentState.todoList = [...documentState.todoList, data];
-			let delta = {
-				op: 'insert',
-				pointer: pointer,
-				content: data
+			let pointer = '/todoList/' + liveDocumentState.todoList.length;
+			let data: TaskData = {
+				title: detail.title,
+				description: detail.description,
+				completed: false
 			};
-			console.log('New delta recorded', delta);
-			documentState.deltaset.push(delta);
+			liveDocumentState.todoList = [...liveDocumentState.todoList, data];
+			currentTransaction.insert(pointer, data);
+			console.log('Task created', pointer, data);
 		}
 	}
 
 	function processTaskDeletion(task_pos: number) {
-		if (documentState.todoList !== undefined) {
+		if (liveDocumentState?.todoList !== undefined && currentTransaction !== undefined) {
 			let pointer = '/todoList/' + task_pos;
-			documentState.todoList = documentState.todoList?.toSpliced(task_pos, 1);
-			let delta = {
-				op: 'delete',
-				pointer: pointer
-			};
-			console.log('New delta recorded', delta);
-			documentState.deltaset.push(delta);
+			liveDocumentState.todoList = liveDocumentState.todoList.toSpliced(task_pos, 1);
+			currentTransaction?.delete(pointer);
+			console.log('Task deleted', pointer);
 		}
 	}
 
 	function warnUnsavedChanges() {
-		if (documentState.deltaset.length > 0) {
+		if (currentTransaction !== undefined && currentTransaction.changes.length > 0) {
 			if (event !== undefined) {
 				event.preventDefault();
 				event.returnValue = true;
@@ -175,7 +130,7 @@
 			<p class="italic text-xs text-gray-500">Document: {document_id}</p>
 			{#if lastSyncedTimestamp !== undefined}
 				<p class="italic text-xs text-gray-500">
-					Most Recent Change ID: {documentState.lastSynced}
+					Most Recent Change ID: {lastSyncedTimestamp}
 				</p>
 			{/if}
 		</div>
@@ -185,7 +140,7 @@
 			</LoaderButton>
 			<LoaderButton
 				class="btn-primary btn-xs"
-				disabled={documentState.todoList === undefined}
+				disabled={liveDocumentState === undefined}
 				bind:this={syncerButton}
 				on:load={syncChanges}
 			>
@@ -193,8 +148,8 @@
 			</LoaderButton>
 		</div>
 	</div>
-	{#if documentState.todoList !== undefined}
-		{#each documentState.todoList as task, pos}
+	{#if liveDocumentState?.todoList !== undefined}
+		{#each liveDocumentState.todoList as task, pos}
 			<Task
 				title={task.title}
 				description={task.description}

@@ -6,15 +6,13 @@
 	import DocumentState from '$lib/document_state.svelte';
 	import LoaderButton from '$lib/loader_button.svelte';
 
-	// @ts-ignore
-	import LunaDBClient from 'lunadb-client-js';
+	import LunaDBAPIClientBridge from '@lunadb-io/lunadb-client-js';
 
 	export let data;
 	// @ts-ignore
 	let document_id: string | null = data.document_id;
 
-	let client = new LunaDBClient(PUBLIC_DB_HOST);
-	client.toggleQueryAnalysis(true);
+	let client = new LunaDBAPIClientBridge(PUBLIC_DB_HOST);
 
 	let existingDocId = '';
 	let documentCreationFailed: boolean = false;
@@ -23,27 +21,15 @@
 	async function createNewDocument() {
 		loaderButton.setIsLoading();
 		let tempId = crypto.randomUUID();
-		let response = await client.v0betaCreateDocument(tempId);
-		if (!response.isSuccess()) {
-			documentCreationFailed = true;
-			loaderButton.setIsLoaded();
-			return;
-		}
 
-		response = await client.v0betaSyncDocument(tempId, '0', [
-			{
-				op: 'insert',
-				pointer: '/todoList',
-				content: [
-					{
-						title: 'Sample Task',
-						description: 'This is a sample task!',
-						completed: false
-					}
-				]
-			}
-		]);
-		if (!response.isSuccess()) {
+		try {
+			await client.createDocument(tempId);
+			// TODO: initial content will eventually be part of the createDocument call.
+			// This is not the preferred way to accomplish this but it doesn't require loading the doc.
+			await client.client.v0betaSyncDocument(tempId, '0', [
+				{ op: 'insert', pointer: '/todoList', content: [] }
+			]);
+		} catch (e) {
 			documentCreationFailed = true;
 			loaderButton.setIsLoaded();
 			return;
