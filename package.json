@@ -39,6 +39,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@lunadb-io/lunadb-client-js": "0.1.1"
+		"@lunadb-io/lunadb-client-js": "0.1.2"
 	}
 }
