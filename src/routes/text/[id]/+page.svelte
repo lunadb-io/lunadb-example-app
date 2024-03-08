@@ -1,4 +1,6 @@
 <script lang="ts">
+	import '../../../prosemirror.css';
+
 	// @ts-ignore
 	import { PUBLIC_DB_HOST } from '$env/static/public';
 	import Alert from '$lib/alert.svelte';
@@ -8,6 +10,28 @@
 		DocumentTransaction,
 		LunaDBDocument
 	} from '@lunadb-io/lunadb-client-js';
+
+	import { EditorState } from 'prosemirror-state';
+	import { EditorView } from 'prosemirror-view';
+	import { schema, defaultMarkdownParser } from 'prosemirror-markdown';
+	import { exampleSetup } from 'prosemirror-example-setup';
+	import { onMount } from 'svelte';
+
+	let state = EditorState.create({
+		doc: defaultMarkdownParser.parse('test') || undefined,
+		plugins: exampleSetup({ schema })
+	});
+
+	let view;
+
+	onMount(() => {
+		view = new EditorView(document.querySelector('#editor'), {
+			state,
+			editable() {
+				return false;
+			}
+		});
+	});
 
 	export let data;
 
@@ -37,6 +61,7 @@
 			lastLoadFailed = false;
 			rerender();
 		} catch (e) {
+			console.error('Failed to load document', e);
 			lastLoadFailed = true;
 		}
 		loaderButton.setIsLoaded();
@@ -111,21 +136,7 @@
 			</LoaderButton>
 		</div>
 	</div>
-	{#if liveDocumentState?.doc !== undefined}
-		<p>TODO DOC GO HERE</p>
-	{:else}
-		<div class="flex flex-row w-full justify-center mt-10">
-			<div class="card w-96 bg-neutral text-neutral-content">
-				<div class="card-body items-center text-center">
-					<p>Before you can make changes, you have to load the current state of the document.</p>
-					<p>Once that's done, then application can report using smaller changes.</p>
-					<div class="card-actions justify-end pt-4">
-						<LoaderButton class="btn-secondary" bind:this={loaderButton} on:load={loadDocument}>
-							Load Document
-						</LoaderButton>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
+	<div class="pt-4">
+		<div id="editor"></div>
+	</div>
 </div>
