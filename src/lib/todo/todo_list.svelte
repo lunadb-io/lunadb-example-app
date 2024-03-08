@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Addtask from './addtask.svelte';
-	import Alert from './alert.svelte';
-	import LoaderButton from './loader_button.svelte';
+	import Alert from '../alert.svelte';
+	import LoaderButton from '../loader_button.svelte';
 	import Task from './task.svelte';
 
 	import LunaDBAPIClientBridge, {
