@@ -53,7 +53,7 @@
 			// TODO: initial content will eventually be part of the createDocument call.
 			// This is not the preferred way to accomplish this but it doesn't require loading the doc.
 			await client.client.v0betaSyncDocument(tempId, '0', [
-				{ op: 'insert', pointer: '/text', content: '' }
+				{ op: 'insert', pointer: '/doc', content: '' }
 			]);
 		} catch (e) {
 			documentCreationFailed = true;
