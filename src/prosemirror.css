@@ -12,6 +12,8 @@
     overflow-y: auto;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
+    padding-left: 1em;
+    padding-right: 1em;
 }
 
 .ProseMirror {
