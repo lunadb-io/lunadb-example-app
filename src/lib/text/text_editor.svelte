@@ -3,47 +3,76 @@
 
 	import type LunaDBAPIClientBridge from '@lunadb-io/lunadb-client-js';
 	import { EditorView } from 'prosemirror-view';
-	import { EditorState } from 'prosemirror-state';
+	import { EditorState, Transaction } from 'prosemirror-state';
 	import { exampleSetup } from 'prosemirror-example-setup';
 	import { schema, defaultMarkdownParser } from 'prosemirror-markdown';
 	import LoaderButton from '$lib/loader_button.svelte';
 	import Alert from '$lib/alert.svelte';
 
+	import StateTracker from './state_tracker';
+	import LunaDBProseMirrorPlugin from './state_tracker';
+	import createLunaDBPlugin from './state_tracker';
+
 	export let document_id: string;
 	export let client: LunaDBAPIClientBridge;
 
-	let state = EditorState.create({
-		// @ts-ignore
-		doc: defaultMarkdownParser.parse(''),
-		plugins: exampleSetup({ schema })
-	});
-
-	let view;
+	let view: EditorView;
 
 	let lastSyncedTimestamp: string | undefined;
 	let lastLoadFailed: boolean = false;
 	let lastSyncFailed: boolean = false;
+	let loaderButton: any;
+	let syncerButton: any;
+
+	let plugin = createLunaDBPlugin(document_id, '/textDoc', client);
 
 	onMount(() => {
+		let state = EditorState.create({
+			// @ts-ignore
+			doc: defaultMarkdownParser.parse(''),
+			plugins: exampleSetup({ schema }).concat(plugin)
+		});
 		view = new EditorView(document.querySelector('#editor'), {
 			state,
-			editable() {
-				return true;
-			}
+			editable: () => false
 		});
 	});
 
-	// function warnUnsavedChanges() {
-	// 	if (currentTransaction !== undefined && currentTransaction.changes.length > 0) {
-	// 		if (event !== undefined) {
-	// 			event.preventDefault();
-	// 			event.returnValue = true;
-	// 		}
-	// 	}
-	// }
+	function warnUnsavedChanges() {
+		let pluginState = plugin.getState(view.state);
+		if (pluginState?.isDirty()) {
+			if (event !== undefined) {
+				event.preventDefault();
+				event.returnValue = true;
+			}
+		}
+	}
+
+	async function loadDocument() {
+		let pluginState = plugin.getState(view.state);
+		try {
+			let newContents = await pluginState?.loadDocument();
+			let txn = view.state.tr;
+			txn.replaceWith(0, view.state.doc.content.size, newContents);
+			view.dispatch(txn);
+			view.setProps({
+				editable: () => true
+			});
+		} catch (e) {
+			console.error(e);
+			lastLoadFailed = true;
+		}
+	}
+
+	async function syncChanges() {
+		let pluginState = plugin.getState(view.state);
+		let diff = pluginState?.diff(view.state);
+		let txn = pluginState?.packageForLuna(diff);
+		console.log(txn);
+	}
 </script>
 
-<!-- <svelte:window on:beforeunload={warnUnsavedChanges} /> -->
+<svelte:window on:beforeunload={warnUnsavedChanges} />
 
 <Alert bind:showAlert={lastLoadFailed}>Failed to load document</Alert>
 <Alert bind:showAlert={lastSyncFailed}>Failed to sync changes</Alert>
@@ -58,6 +87,14 @@
 					Most Recent Change ID: {lastSyncedTimestamp}
 				</p>
 			{/if}
+		</div>
+		<div style="margin-left:auto" class="self-center space-x-2">
+			<LoaderButton class="btn-secondary btn-xs" bind:this={loaderButton} on:load={loadDocument}>
+				Reload Document
+			</LoaderButton>
+			<LoaderButton class="btn-primary btn-xs" bind:this={syncerButton} on:load={syncChanges}>
+				Sync Changes
+			</LoaderButton>
 		</div>
 	</div>
 	<div class="pt-4">
