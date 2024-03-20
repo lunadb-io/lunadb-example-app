@@ -58,6 +58,7 @@
 			view.setProps({
 				editable: () => true
 			});
+			pluginState?.markAsClean();
 		} catch (e) {
 			console.error(e);
 			lastLoadFailed = true;
@@ -71,6 +72,7 @@
 			let txn = view.state.tr;
 			txn.replaceWith(0, view.state.doc.content.size, newContents);
 			view.dispatch(txn);
+			pluginState?.markAsClean();
 		} catch (e) {
 			console.error(e);
 			lastSyncFailed = true;

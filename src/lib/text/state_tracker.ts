@@ -66,6 +66,10 @@ export class LunaDBProseMirrorPlugin {
         this.dirty = true;
     }
 
+    markAsClean() {
+        this.dirty = false;
+    }
+
     isDirty(): boolean {
         return this.dirty;
     }
@@ -73,7 +77,6 @@ export class LunaDBProseMirrorPlugin {
     async loadDocument(): Promise<Node>{
         let resp = await this.client.loadDocument(this.documentKey);
         this.baseDocument = resp;
-        this.dirty = false;
         let contents = this.getContents();
         if (contents !== null) {
             return contents;
@@ -86,11 +89,7 @@ export class LunaDBProseMirrorPlugin {
         if (this.baseDocument !== undefined) {
             let diff = this.diff(currentState);
             let txn = this.packageForLuna(diff);
-            let ret = await this.client.syncDocument(this.baseDocument, txn);
-
-            // todo: 100% sure a race condition can happen here, markAsDirty
-            // should maybe set a logical timestamp/generation counter
-            this.dirty = false;
+            await this.client.syncDocument(this.baseDocument, txn);
 
             let contents = this.getContents();
             if (contents !== null) {
