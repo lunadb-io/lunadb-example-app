@@ -66,9 +66,15 @@
 
 	async function syncChanges() {
 		let pluginState = plugin.getState(view.state);
-		let diff = pluginState?.diff(view.state);
-		let txn = pluginState?.packageForLuna(diff);
-		console.log(txn);
+		try {
+			let newContents = await pluginState?.syncDocument(view.state);
+			let txn = view.state.tr;
+			txn.replaceWith(0, view.state.doc.content.size, newContents);
+			view.dispatch(txn);
+		} catch (e) {
+			console.error(e);
+			lastSyncFailed = true;
+		}
 	}
 </script>
 

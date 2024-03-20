@@ -82,6 +82,27 @@ export class LunaDBProseMirrorPlugin {
         }
     }
 
+    async syncDocument(currentState: EditorState): Promise<Node> {
+        if (this.baseDocument !== undefined) {
+            let diff = this.diff(currentState);
+            let txn = this.packageForLuna(diff);
+            let ret = await this.client.syncDocument(this.baseDocument, txn);
+
+            // todo: 100% sure a race condition can happen here, markAsDirty
+            // should maybe set a logical timestamp/generation counter
+            this.dirty = false;
+
+            let contents = this.getContents();
+            if (contents !== null) {
+                return contents;
+            } else {
+                throw new Error("Received null document while parsing");
+            }
+        } else {
+            throw new Error("Must perform initial sync before further syncs can be performed");
+        }
+    }
+
     getContents(): Node | null {
         if (this.baseDocument) {
             let baseState = this.baseDocument.get(this.pointer);
