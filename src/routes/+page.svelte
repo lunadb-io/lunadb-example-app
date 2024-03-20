@@ -7,6 +7,7 @@
 
 	import LunaDBAPIClientBridge from '@lunadb-io/lunadb-client-js';
 	import { goto } from '$app/navigation';
+	import { schema } from 'prosemirror-markdown';
 
 	let client = new LunaDBAPIClientBridge(PUBLIC_DB_HOST);
 
@@ -53,7 +54,7 @@
 			// TODO: initial content will eventually be part of the createDocument call.
 			// This is not the preferred way to accomplish this but it doesn't require loading the doc.
 			await client.client.v0betaSyncDocument(tempId, '0', [
-				{ op: 'insert', pointer: '/textDoc', content: '' }
+				{ op: 'insert', pointer: '/textDoc', content: schema.node('paragraph').toJSON() }
 			]);
 		} catch (e) {
 			documentCreationFailed = true;

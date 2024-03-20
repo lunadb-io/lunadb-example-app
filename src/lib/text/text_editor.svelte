@@ -9,9 +9,7 @@
 	import LoaderButton from '$lib/loader_button.svelte';
 	import Alert from '$lib/alert.svelte';
 
-	import StateTracker from './state_tracker';
-	import LunaDBProseMirrorPlugin from './state_tracker';
-	import createLunaDBPlugin from './state_tracker';
+	import createLunaDBPlugin from './plugin';
 
 	export let document_id: string;
 	export let client: LunaDBAPIClientBridge;
@@ -24,12 +22,11 @@
 	let loaderButton: any;
 	let syncerButton: any;
 
-	let plugin = createLunaDBPlugin(document_id, '/textDoc', client);
+	let plugin = createLunaDBPlugin(client, document_id, '/textDoc');
 
 	onMount(() => {
 		let state = EditorState.create({
-			// @ts-ignore
-			doc: defaultMarkdownParser.parse(''),
+			schema,
 			plugins: exampleSetup({ schema }).concat(plugin)
 		});
 		view = new EditorView(document.querySelector('#editor'), {
@@ -51,14 +48,13 @@
 	async function loadDocument() {
 		let pluginState = plugin.getState(view.state);
 		try {
-			let newContents = await pluginState?.loadDocument();
+			let newContents = await pluginState?.loadDocument(schema);
 			let txn = view.state.tr;
 			txn.replaceWith(0, view.state.doc.content.size, newContents);
 			view.dispatch(txn);
 			view.setProps({
 				editable: () => true
 			});
-			pluginState?.markAsClean();
 		} catch (e) {
 			console.error(e);
 			lastLoadFailed = true;
@@ -68,15 +64,25 @@
 	async function syncChanges() {
 		let pluginState = plugin.getState(view.state);
 		try {
-			let newContents = await pluginState?.syncDocument(view.state);
+			// note: if changes are made while we are syncing then they have to be rebased.
+			// For most applications you can probably get away with "silently" locking the
+			// document and skipping rebasing altogether.
+			// If that's not acceptable, you'll need to rebase the local changes against
+			// a stepmap derived from the content of syncDocument.
+			view.setProps({
+				editable: () => false
+			});
+			let newContents = await pluginState?.syncDocument(schema, view.state);
 			let txn = view.state.tr;
 			txn.replaceWith(0, view.state.doc.content.size, newContents);
 			view.dispatch(txn);
-			pluginState?.markAsClean();
 		} catch (e) {
 			console.error(e);
 			lastSyncFailed = true;
 		}
+		view.setProps({
+			editable: () => true
+		});
 	}
 </script>
 

@@ -86,6 +86,8 @@ export class LunaDBProseMirrorPlugin {
     }
 
     async syncDocument(currentState: EditorState): Promise<Node> {
+        // todo: diff contents against currentState so we can rebase
+        // any changes that occurred in the meantime
         if (this.baseDocument !== undefined) {
             let diff = this.diff(currentState);
             let txn = this.packageForLuna(diff);
@@ -119,6 +121,7 @@ export default function createLunaDBPlugin(documentKey: string, pointer: string,
                 return new LunaDBProseMirrorPlugin(documentKey, pointer, client, instance);
             },
             apply(tr, plugin, oldState, newState) {
+                console.log(oldState.toJSON(), newState.toJSON());
                 if (tr.docChanged) {
                     plugin.markAsDirty();
                 }
