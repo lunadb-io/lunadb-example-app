@@ -64,11 +64,6 @@
 	async function syncChanges() {
 		let pluginState = plugin.getState(view.state);
 		try {
-			// note: if changes are made while we are syncing then they have to be rebased.
-			// For most applications you can probably get away with "silently" locking the
-			// document and skipping rebasing altogether.
-			// If that's not acceptable, you'll need to rebase the local changes against
-			// a stepmap derived from the content of syncDocument.
 			view.setProps({
 				editable: () => false
 			});
