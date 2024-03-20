@@ -1,6 +1,5 @@
 import { DocumentTransaction, type LunaDBDocument } from "@lunadb-io/lunadb-client-js";
 import type LunaDBAPIClientBridge from "@lunadb-io/lunadb-client-js";
-import { detailedDiff, type DetailedDiff } from "deep-object-diff";
 import * as jsondiffpatch from "jsondiffpatch";
 import DiffMatchPatch from "diff-match-patch";
 import type { BaseFormatterContext, DeltaType, NodeType } from "jsondiffpatch/formatters/base";
