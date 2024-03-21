@@ -35,6 +35,7 @@
 	});
 
 	async function loadDocument() {
+		loaderButton.setIsLoading();
 		let pluginState = plugin.getState(view.state);
 		try {
 			let newContents = await pluginState?.loadDocument(schema);
@@ -48,9 +49,11 @@
 			console.error(e);
 			lastLoadFailed = true;
 		}
+		loaderButton.setIsLoaded();
 	}
 
 	async function syncChanges() {
+		syncerButton.setIsLoading();
 		let pluginState = plugin.getState(view.state);
 		try {
 			view.setProps({
@@ -67,6 +70,7 @@
 		view.setProps({
 			editable: () => true
 		});
+		syncerButton.setIsLoaded();
 	}
 </script>
 
