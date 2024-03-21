@@ -18,7 +18,7 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@tailwindcss/typography": "^0.5.10",
-		"@types/diff": "^5.0.9",
+		"@types/diff-match-patch": "^1.0.36",
 		"@types/eslint": "8.56.0",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
@@ -41,6 +41,7 @@
 	"type": "module",
 	"dependencies": {
 		"@lunadb-io/lunadb-client-js": "0.1.4",
+		"@lunadb-io/lunadb-prosemirror": "^0.1.0",
 		"diff-match-patch": "^1.0.5",
 		"jsondiffpatch": "^0.6.0",
 		"prosemirror-example-setup": "^1.2.2",

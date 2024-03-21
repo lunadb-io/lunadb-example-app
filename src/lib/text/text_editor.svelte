@@ -3,13 +3,12 @@
 
 	import type LunaDBAPIClientBridge from '@lunadb-io/lunadb-client-js';
 	import { EditorView } from 'prosemirror-view';
-	import { EditorState, Transaction } from 'prosemirror-state';
+	import { EditorState } from 'prosemirror-state';
 	import { exampleSetup } from 'prosemirror-example-setup';
-	import { schema, defaultMarkdownParser } from 'prosemirror-markdown';
+	import { schema } from 'prosemirror-markdown';
 	import LoaderButton from '$lib/loader_button.svelte';
 	import Alert from '$lib/alert.svelte';
-
-	import createLunaDBPlugin from './plugin';
+	import createLunaDBPlugin from '@lunadb-io/lunadb-prosemirror';
 
 	export let document_id: string;
 	export let client: LunaDBAPIClientBridge;
@@ -34,16 +33,6 @@
 			editable: () => false
 		});
 	});
-
-	function warnUnsavedChanges() {
-		let pluginState = plugin.getState(view.state);
-		if (pluginState?.isDirty()) {
-			if (event !== undefined) {
-				event.preventDefault();
-				event.returnValue = true;
-			}
-		}
-	}
 
 	async function loadDocument() {
 		let pluginState = plugin.getState(view.state);
@@ -80,8 +69,6 @@
 		});
 	}
 </script>
-
-<svelte:window on:beforeunload={warnUnsavedChanges} />
 
 <Alert bind:showAlert={lastLoadFailed}>Failed to load document</Alert>
 <Alert bind:showAlert={lastSyncFailed}>Failed to sync changes</Alert>
