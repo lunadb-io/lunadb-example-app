@@ -1,3 +1,7 @@
+# Archived
+
+This application was originally served on [lunadb.io](https://www.lunadb.io) as a showcase, but has since been retired. We now make much simpler examples that can be seen at https://github.com/lunadb-io/lunadb-examples.
+
 # LunaDB Example Application
 
 This is a Todo List application provided to showcase how LunaDB can be used to integrate
